@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ translations.title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ translations.subtitle }}">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#00ffcc">
+  
+  <style>
+    :root {
+      --primary-color: #00ffcc;
+      --secondary-color: #0080ff;
+      --danger-color: #ff4757;
+      --warning-color: #ffa502;
+      --success-color: #2ed573;
+      --dark-bg: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --border-color: #333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a2e 50%, #16213e 100%);
+      color: var(--primary-color);
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container-fluid {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Language Selector */
+    .language-selector {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .language-selector select {
+      background: var(--card-bg);
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    /* Header Styles */
+    .header-section {
+      background: linear-gradient(145deg, #1a1a2e, #16213e);
+      border: 2px solid var(--primary-color);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 40px rgba(0, 255, 204, 0.2);
+      text-align: center;
+      position: relative;
+    }
+
+    .brand-logo {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      animation: pulse 2s infinite;
+    }
+
+    .brand-title {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .brand-subtitle {
+      font-size: 1.2rem;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    /* User Menu */
+    .user-menu {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    .user-menu a {
+      color: var(--primary-color);
+      text-decoration: none;
+      margin-right: 15px;
+      font-size: 0.9rem;
+    }
+
+    /* Search Section */
+    .search-section {
+      background: linear-gradient(145deg, var(--card-bg), #2a2a2a);
+      border: 1px solid var(--border-color);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .search-input {
+      background: var(--dark-bg);
+      border: 2px solid var(--primary-color);
+      color: white;
+      font-size: 1.1rem;
+      padding: 15px 20px;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      background: #2a2a2a;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+      color: white;
+    }
+
+    .search-btn {
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      border: none;
+      color: black;
+      font-weight: bold;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: linear-gradient(145deg, var(--card-bg), #2a2a2a);
+      border: 1px solid var(--border-color);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 255, 204, 0.2);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: #888;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stat-icon {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.5rem;
+      opacity: 0.3;
+    }
+
+    /* Main Content Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Styles */
+    .analysis-card {
+      background: linear-gradient(145deg, var(--card-bg), #2a2a2a);
+      border: 1px solid var(--border-color);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      color: var(--primary-color);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    /* Data Items */
+    .data-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+    }
+
+    .data-item:hover {
+      background: rgba(0, 255, 204, 0.05);
+      padding-left: 10px;
+      margin: 0 -10px;
+      border-radius: 8px;
+    }
+
+    .data-item:last-child {
+      border-bottom: none;
+    }
+
+    .data-label {
+      color: var(--primary-color);
+      font-weight: 600;
+      min-width: 150px;
+    }
+
+    .data-value {
+      color: white;
+      text-align: right;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-safe { 
+      background: linear-gradient(45deg, var(--success-color), #20c997); 
+      color: white; 
+    }
+    .status-warning { 
+      background: linear-gradient(45deg, var(--warning-color), #fd7e14); 
+      color: white; 
+    }
+    .status-danger { 
+      background: linear-gradient(45deg, var(--danger-color), #e74c3c); 
+      color: white; 
+    }
+
+    /* Map Container - CORREÇÃO DO BUG */
+    .map-container {
+      height: 300px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 20px 0;
+      border: 2px solid var(--border-color);
+      background: #2a2a2a;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: none;
+      text-align: center;
+      color: var(--primary-color);
+      padding: 20px;
+    }
+
+    .spinner {
+      border: 4px solid var(--border-color);
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Risk Score Meter */
+    .risk-meter {
+      width: 100%;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .risk-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.5s ease;
+    }
+
+    .risk-low { background: linear-gradient(90deg, var(--success-color), #20c997); }
+    .risk-medium { background: linear-gradient(90deg, var(--warning-color), #fd7e14); }
+    .risk-high { background: linear-gradient(90deg, var(--danger-color), #e74c3c); }
+
+    /* Export Button */
+    .export-btn {
+      background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+    }
+
+    /* Speed Test Button */
+    .speed-test-btn {
+      background: linear-gradient(45deg, #e17055, #fd79a8);
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    .speed-test-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(225, 112, 85, 0.4);
+    }
+
+    .speed-test-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Speed Test Results */
+    .speed-test-results {
+      background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+      border: 1px solid var(--primary-color);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 15px;
+    }
+
+    .speed-result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #444;
+    }
+
+    .speed-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .speed-result-label {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .speed-result-value {
+      color: white;
+      font-weight: bold;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Weather Widget */
+    .weather-widget {
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+      border-radius: 15px;
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+
+    .weather-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .weather-temp {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Language Selector -->
+  <div class="language-selector">
+    <select onchange="changeLanguage(this.value)">
+      <option value="en" {{ 'selected' if lang == 'en' else '' }}>🇺🇸 English</option>
+      <option value="pt" {{ 'selected' if lang == 'pt' else '' }}>🇧🇷 Português</option>
+      <option value="es" {{ 'selected' if lang == 'es' else '' }}>🇪🇸 Español</option>
+      <option value="fr" {{ 'selected' if lang == 'fr' else '' }}>🇫🇷 Français</option>
+      <option value="de" {{ 'selected' if lang == 'de' else '' }}>🇩🇪 Deutsch</option>
+      <option value="ja" {{ 'selected' if lang == 'ja' else '' }}>🇯🇵 日本語</option>
+      <option value="ko" {{ 'selected' if lang == 'ko' else '' }}>🇰🇷 한국어</option>
+      <option value="zh" {{ 'selected' if lang == 'zh' else '' }}>🇨🇳 中文</option>
+      <option value="sv" {{ 'selected' if lang == 'sv' else '' }}>🇸🇪 Svenska</option>
+      <option value="ru" {{ 'selected' if lang == 'ru' else '' }}>🇷🇺 Русский</option>
+      <option value="nl" {{ 'selected' if lang == 'nl' else '' }}>🇳🇱 Nederlands</option>
+      <option value="hi" {{ 'selected' if lang == 'hi' else '' }}>🇮🇳 हिन्दी</option>
+    </select>
+  </div>
+
+  <div class="container-fluid">
+    <!-- Header Section -->
+    <div class="header-section">
+      <!-- User Menu -->
+      <div class="user-menu">
+        {% if session.user_id %}
+          <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> {{ translations.dashboard }}</a>
+          <a href="/bulk"><i class="fas fa-list"></i> {{ translations.bulk_analysis }}</a>
+          <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          <span style="color: #888;">{{ session.username }}</span>
+        {% else %}
+          <a href="/login"><i class="fas fa-sign-in-alt"></i> {{ translations.login }}</a>
+          <a href="/register"><i class="fas fa-user-plus"></i> {{ translations.register }}</a>
+        {% endif %}
+      </div>
+
+      <div class="brand-logo">🌐</div>
+      <h1 class="brand-title">NetScan Pro</h1>
+      <p class="brand-subtitle">{{ translations.subtitle }}</p>
+      
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="input-group input-group-lg">
+          <input type="text" class="form-control search-input" placeholder="{{ translations.search_placeholder }}" id="ipInput">
+          <button class="btn search-btn" onclick="searchIP()" id="searchBtn">
+            <i class="fas fa-search"></i> {{ translations.analyze_btn }}
+          </button>
+        </div>
+        
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <div>Performing comprehensive network analysis...</div>
+        </div>
+        
+        <div class="mt-3">
+          <small style="color: #888;">
+            <i class="fas fa-info-circle"></i> <strong>Developer API:</strong> 
+            <code>GET /api/&lt;ip&gt;</code> • 
+            <strong>Export:</strong> <code>GET /export/&lt;ip&gt;</code> •
+            <strong>Real-time Speed Test:</strong> <code>Built-in</code>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    {% if data.get('error') %}
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Analysis Error:</strong> {{ data.error }}
+      </div>
+    {% else %}
+      
+      <!-- Quick Stats Overview -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fas fa-globe stat-icon"></i>
+          <div class="stat-value">{{ data.geographic.country_code or "N/A" }}</div>
+          <div class="stat-label">{{ translations.country }}</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-network-wired stat-icon"></i>
+          <div class="stat-value">{{ data.network.usage_type or "Unknown" }}</div>
+          <div class="stat-label">Network Type</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-shield-alt stat-icon"></i>
+          <div class="stat-value">{{ data.security.threat_analysis.risk_score or 0 }}%</div>
+          <div class="stat-label">{{ translations.risk_score }}</div>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-clock stat-icon"></i>
+          <div class="stat-value">{{ "%.2f"|format(data.analysis_duration or 0) }}s</div>
+          <div class="stat-label">Analysis Time</div>
+        </div>
+      </div>
+
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div>
+          <!-- Basic Information Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-info-circle card-icon"></i>
+              <h3 class="card-title">{{ translations.basic_info }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-map-marker-alt"></i> IP Address:</span>
+              <span class="data-value">{{ data.ip }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-tag"></i> IP Type:</span>
+              <span class="data-value">{{ data.basic.ip_type or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-exchange-alt"></i> Reverse DNS:</span>
+              <span class="data-value">{{ data.basic.reverse_dns or "Not available" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-globe"></i> Domain:</span>
+              <span class="data-value">{{ data.basic.domain or "Not available" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-calendar"></i> Analysis Time:</span>
+              <span class="data-value">{{ data.analysis_timestamp }}</span>
+            </div>
+          </div>
+
+          <!-- Geographic Intelligence Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-globe-americas card-icon"></i>
+              <h3 class="card-title">{{ translations.geographic_intel }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-flag"></i> {{ translations.country }}:</span>
+              <span class="data-value">{{ data.geographic.country_name or "Unknown" }} {% if data.geographic.country_code %}({{ data.geographic.country_code }}){% endif %}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-map"></i> Continent:</span>
+              <span class="data-value">{{ data.geographic.continent or "Unknown" }} {% if data.geographic.continent_code %}({{ data.geographic.continent_code }}){% endif %}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-map-signs"></i> Region:</span>
+              <span class="data-value">{{ data.geographic.region or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-city"></i> {{ translations.city }}:</span>
+              <span class="data-value">{{ data.geographic.city or "N/A" }}</span>
+            </div>
+            {% if data.geographic.district %}
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-building"></i> District:</span>
+              <span class="data-value">{{ data.geographic.district }}</span>
+            </div>
+            {% endif %}
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-mail-bulk"></i> Postal Code:</span>
+              <span class="data-value">{{ data.geographic.postal_code or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-crosshairs"></i> Coordinates:</span>
+              <span class="data-value">
+                {% if data.geographic.coordinates.lat and data.geographic.coordinates.lon %}
+                  <a href="https://www.google.com/maps?q={{ data.geographic.coordinates.lat }},{{ data.geographic.coordinates.lon }}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                    {{ data.geographic.coordinates.lat }}, {{ data.geographic.coordinates.lon }} <i class="fas fa-external-link-alt"></i>
+                  </a>
+                {% else %}
+                  Not available
+                {% endif %}
+              </span>
+            </div>
+
+            <!-- Interactive Map - CORREÇÃO DO BUG -->
+            {% if data.geographic.coordinates.lat and data.geographic.coordinates.lon %}
+            <div class="map-container" id="mapContainer">
+              <div id="map" style="height: 100%; width: 100%;"></div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Weather Information -->
+          {% if data.weather.available %}
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-cloud-sun card-icon"></i>
+              <h3 class="card-title">{{ translations.weather_info }}</h3>
+            </div>
+            
+            <div class="weather-widget">
+              <div class="weather-icon">
+                {% if 'rain' in data.weather.description.lower() %}
+                  <i class="fas fa-cloud-rain"></i>
+                {% elif 'cloud' in data.weather.description.lower() %}
+                  <i class="fas fa-cloud"></i>
+                {% elif 'sun' in data.weather.description.lower() or 'clear' in data.weather.description.lower() %}
+                  <i class="fas fa-sun"></i>
+                {% else %}
+                  <i class="fas fa-cloud-sun"></i>
+                {% endif %}
+              </div>
+              <div class="weather-temp">{{ data.weather.temperature }}</div>
+              <div>{{ data.weather.description }}</div>
+              <small>Humidity: {{ data.weather.humidity }}</small>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Currency Information -->
+          {% if data.currency.code %}
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-coins card-icon"></i>
+              <h3 class="card-title">{{ translations.currency_info }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-money-bill"></i> Currency:</span>
+              <span class="data-value">{{ data.currency.name }} ({{ data.currency.code }})</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-dollar-sign"></i> Symbol:</span>
+              <span class="data-value">{{ data.currency.symbol }}</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- Time Intelligence Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-clock card-icon"></i>
+              <h3 class="card-title">{{ translations.time_intel }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-globe"></i> {{ translations.timezone }}:</span>
+              <span class="data-value">{{ data.time.timezone or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-clock"></i> Local Time:</span>
+              <span class="data-value">{{ data.time.local_time or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-globe-americas"></i> UTC Time:</span>
+              <span class="data-value">{{ data.time.utc_time or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-arrows-alt-h"></i> UTC Offset:</span>
+              <span class="data-value">{{ data.time.utc_offset_formatted or "N/A" }}</span>
+            </div>
+            {% if data.time.is_dst is defined %}
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-sun"></i> Daylight Saving:</span>
+              <span class="data-value">{{ "Active" if data.time.is_dst else "Inactive" }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Network Intelligence Card -->
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-network-wired card-icon"></i>
+              <h3 class="card-title">{{ translations.network_intel }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-hashtag"></i> ASN:</span>
+              <span class="data-value">{{ data.network.asn or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-info"></i> AS Description:</span>
+              <span class="data-value">{{ data.network.asn_description or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-building"></i> Organization:</span>
+              <span class="data-value">{{ data.network.organization or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-wifi"></i> ISP:</span>
+              <span class="data-value">{{ data.network.isp or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-project-diagram"></i> CIDR Block:</span>
+              <span class="data-value">{{ data.network.cidr or "N/A" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-tags"></i> Usage Type:</span>
+              <span class="data-value">{{ data.network.usage_type or "Unknown" }}</span>
+            </div>
+          </div>
+
+          <!-- Performance Analysis - CORRIGIDO -->
+          {% if data.performance %}
+          <div class="analysis-card">
+            <div class="card-header">
+              <i class="fas fa-tachometer-alt card-icon"></i>
+              <h3 class="card-title">{{ translations.performance_analysis }}</h3>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-download"></i> Estimated Speed:</span>
+              <span class="data-value">{{ data.performance.estimated_speed or "Unknown" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-link"></i> Connection Type:</span>
+              <span class="data-value">{{ data.performance.connection_type or "Unknown" }}</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-star"></i> Quality Score:</span>
+              <span class="data-value">{{ data.performance.quality_score or 0 }}/100</span>
+            </div>
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-stopwatch"></i> Latency Estimate:</span>
+              <span class="data-value">{{ data.performance.latency_estimate or "Unknown" }}</span>
+            </div>
+            
+            <!-- SPEED TEST BUTTON - FUNCIONAL -->
+            <button class="speed-test-btn" onclick="runSpeedTest()" id="speedTestBtn">
+              <i class="fas fa-rocket"></i> Run Real Speed Test
+            </button>
+            <div id="speedTestResults" style="display: none;"></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Security Analysis - Full Width -->
+      <div class="analysis-card">
+        <div class="card-header">
+          <i class="fas fa-shield-alt card-icon"></i>
+          <h3 class="card-title">{{ translations.security_intel }}</h3>
+          <button class="export-btn ms-auto" onclick="exportAnalysis('{{ data.ip }}')">
+            <i class="fas fa-download"></i> {{ translations.export_report }}
+          </button>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-exclamation-triangle"></i> Risk Assessment:</span>
+              <span class="data-value">
+                {% set score = data.security.threat_analysis.risk_score or 0 %}
+                <div class="risk-meter">
+                  <div class="risk-fill {% if score <= 25 %}risk-low{% elif score <= 50 %}risk-medium{% else %}risk-high{% endif %}" 
+                       style="width: {{ score }}%"></div>
+                </div>
+                <span class="status-badge {% if score <= 25 %}status-safe{% elif score <= 50 %}status-warning{% else %}status-danger{% endif %}">
+                  {{ score }}% Risk
+                </span>
+              </span>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-user-secret"></i> Tor Exit Node:</span>
+              <span class="data-value">
+                {% if data.security.is_tor %}
+                  <span class="status-badge status-danger"><i class="fas fa-exclamation-triangle"></i> YES</span>
+                {% else %}
+                  <span class="status-badge status-safe"><i class="fas fa-check"></i> NO</span>
+                {% endif %}
+              </span>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-mask"></i> Proxy Detected:</span>
+              <span class="data-value">
+                {% if data.network.is_proxy %}
+                  <span class="status-badge status-warning"><i class="fas fa-exclamation-triangle"></i> YES</span>
+                {% else %}
+                  <span class="status-badge status-safe"><i class="fas fa-check"></i> NO</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-server"></i> Data Center:</span>
+              <span class="data-value">
+                {% if data.network.is_datacenter %}
+                  <span class="status-badge status-warning"><i class="fas fa-building"></i> YES</span>
+                {% else %}
+                  <span class="status-badge status-safe"><i class="fas fa-check"></i> NO</span>
+                {% endif %}
+              </span>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-mobile-alt"></i> Mobile Network:</span>
+              <span class="data-value">
+                {% if data.network.is_mobile %}
+                  <span class="status-badge status-warning"><i class="fas fa-mobile-alt"></i> YES</span>
+                {% else %}
+                  <span class="status-badge status-safe"><i class="fas fa-check"></i> NO</span>
+                {% endif %}
+              </span>
+            </div>
+            
+            <div class="data-item">
+              <span class="data-label"><i class="fas fa-cloud"></i> Hosting Provider:</span>
+              <span class="data-value">
+                {% if data.network.is_hosting %}
+                  <span class="status-badge status-warning"><i class="fas fa-cloud"></i> YES</span>
+                {% else %}
+                  <span class="status-badge status-safe"><i class="fas fa-check"></i> NO</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {% if data.security.threat_analysis.threat_types %}
+        <div class="data-item">
+          <span class="data-label"><i class="fas fa-bug"></i> Threat Types:</span>
+          <span class="data-value">{{ data.security.threat_analysis.threat_types | join(", ") }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>© 2025 • <strong>NetScan Pro</strong> - Advanced Network Intelligence Platform</p>
+      <p><i class="fas fa-rocket"></i> Real-time analysis • <i class="fas fa-shield-alt"></i> Privacy-focused • <i class="fas fa-satellite-dish"></i> Multiple intelligence sources • <i class="fas fa-globe"></i> Global coverage</p>
+    </div>
+  </div>
+
+  <script>
+    // Language switching
+    function changeLanguage(lang) {
+      const currentUrl = new URL(window.location);
+      currentUrl.searchParams.set('lang', lang);
+      window.location.href = currentUrl.toString();
+    }
+
+    // Enhanced search functionality
+    function searchIP() {
+      const ip = document.getElementById('ipInput').value.trim();
+      const btn = document.getElementById('searchBtn');
+      const loading = document.getElementById('loading');
+      
+      if (!ip) {
+        alert('Please enter a valid IP address');
+        return;
+      }
+      
+      // Enhanced IP validation
+      const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      if (!ipRegex.test(ip)) {
+        alert('Please enter a valid IP address (format: 192.168.1.1)');
+        return;
+      }
+      
+      // Show loading animation
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+      loading.style.display = 'block';
+      
+      // Add current language to search
+      const currentLang = new URLSearchParams(window.location.search).get('lang') || 'en';
+      
+      // Redirect to search
+      setTimeout(() => {
+        window.location.href = `/search?ip=${encodeURIComponent(ip)}&lang=${currentLang}`;
+      }, 1000);
+    }
+
+    // Export functionality
+    function exportAnalysis(ip) {
+      window.open(`/export/${ip}`, '_blank');
+    }
+
+    // SPEED TEST FUNCTIONALITY - COMPLETAMENTE FUNCIONAL
+    async function runSpeedTest() {
+      const btn = document.getElementById('speedTestBtn');
+      const results = document.getElementById('speedTestResults');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Speed Test...';
+      
+      try {
+        // Teste de latência múltiplo
+        const latencyTests = [];
+        const testUrls = [
+          'https://www.google.com/generate_204',
+          'https://www.cloudflare.com/cdn-cgi/trace',
+          'https://httpbin.org/get'
+        ];
+
+        console.log('🚀 Starting speed test...');
+
+        // Teste de latência
+        for (let i = 0; i < 3; i++) {
+          const start = performance.now();
+          try {
+            await fetch(testUrls[i % testUrls.length], { 
+              method: 'HEAD', 
+              mode: 'no-cors',
+              cache: 'no-cache'
+            });
+            latencyTests.push(performance.now() - start);
+          } catch (e) {
+            console.warn(`Latency test ${i+1} failed:`, e);
+          }
+        }
+
+        const avgLatency = latencyTests.length > 0 ? 
+          Math.round(latencyTests.reduce((a, b) => a + b, 0) / latencyTests.length) : null;
+
+        // Teste de download
+        let downloadSpeed = null;
+        let uploadSpeed = null;
+
+        try {
+          console.log('📥 Testing download speed...');
+          const downloadStart = performance.now();
+          
+          // Usar um arquivo de teste menor para evitar problemas de CORS
+          const response = await fetch('https://httpbin.org/bytes/500000', { // 500KB
+            cache: 'no-cache'
+          });
+          
+          if (response.ok) {
+            const data = await response.blob();
+            const downloadEnd = performance.now();
+            
+            const downloadTime = (downloadEnd - downloadStart) / 1000; // segundos
+            const downloadSizeMB = data.size / (1024 * 1024); // MB
+            downloadSpeed = Math.round((downloadSizeMB * 8) / downloadTime * 100) / 100; // Mbps
+          }
+        } catch (e) {
+          console.warn('Download test failed:', e);
+        }
+
+        // Teste de upload simulado
+        try {
+          console.log('📤 Testing upload speed...');
+          const uploadStart = performance.now();
+          const uploadData = new Blob([new ArrayBuffer(50000)]); // 50KB
+          const formData = new FormData();
+          formData.append('test', uploadData);
+          
+          await fetch('https://httpbin.org/post', {
+            method: 'POST',
+            body: formData,
+            cache: 'no-cache'
+          });
+          
+          const uploadEnd = performance.now();
+          const uploadTime = (uploadEnd - uploadStart) / 1000;
+          const uploadSizeMB = uploadData.size / (1024 * 1024);
+          uploadSpeed = Math.round((uploadSizeMB * 8) / uploadTime * 100) / 100; // Mbps
+        } catch (e) {
+          console.warn('Upload test failed:', e);
+        }
+
+        // Exibir resultados
+        const now = new Date();
+        results.innerHTML = `
+          <div class="speed-test-results">
+            <h6 style="color: var(--primary-color); margin-bottom: 15px;">
+              <i class="fas fa-chart-line"></i> Speed Test Results
+            </h6>
+            
+            <div class="speed-result-item">
+              <span class="speed-result-label">
+                <i class="fas fa-stopwatch"></i> Ping
+              </span>
+              <span class="speed-result-value">
+                ${avgLatency ? avgLatency + ' ms' : 'Failed'}
+              </span>
+            </div>
+            
+            <div class="speed-result-item">
+              <span class="speed-result-label">
+                <i class="fas fa-download"></i> Download
+              </span>
+              <span class="speed-result-value">
+                ${downloadSpeed ? downloadSpeed + ' Mbps' : 'Failed'}
+              </span>
+            </div>
+            
+            <div class="speed-result-item">
+              <span class="speed-result-label">
+                <i class="fas fa-upload"></i> Upload
+              </span>
+              <span class="speed-result-value">
+                ${uploadSpeed ? uploadSpeed + ' Mbps' : 'Failed'}
+              </span>
+            </div>
+            
+            <div class="speed-result-item">
+              <span class="speed-result-label">
+                <i class="fas fa-clock"></i> Test Time
+              </span>
+              <span class="speed-result-value">
+                ${now.toLocaleTimeString()}
+              </span>
+            </div>
+            
+            <div style="margin-top: 15px;">
+              <small style="color: #888;">
+                <i class="fas fa-info-circle"></i> 
+                Results may vary based on network conditions and browser limitations.
+                ${!downloadSpeed || !uploadSpeed ? ' Some tests failed due to CORS restrictions.' : ''}
+              </small>
+            </div>
+          </div>
+        `;
+        
+        results.style.display = 'block';
+        console.log('✅ Speed test completed');
+
+      } catch (error) {
+        console.error('❌ Speed test error:', error);
+        results.innerHTML = `
+          <div class="speed-test-results">
+            <div class="alert alert-warning">
+              <h6><i class="fas fa-exclamation-triangle"></i> Speed Test Limited</h6>
+              <p>Browser security restrictions limit comprehensive speed testing.</p>
+              <div class="speed-result-item">
+                <span class="speed-result-label">
+                  <i class="fas fa-info-circle"></i> Status
+                </span>
+                <span class="speed-result-value">
+                  Partial Results Only
+                </span>
+              </div>
+              <small style="color: #666;">
+                For accurate speed testing, use dedicated tools or native applications.
+              </small>
+            </div>
+          </div>
+        `;
+        results.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Run Real Speed Test';
+      }
+    }
+
+    // Interactive map initialization - CORREÇÃO DO BUG
+    {% if data.geographic.coordinates.lat and data.geographic.coordinates.lon %}
+    document.addEventListener('DOMContentLoaded', function() {
+      // Aguardar o DOM estar completamente carregado
+      setTimeout(function() {
+        const mapContainer = document.getElementById('mapContainer');
+        const mapDiv = document.getElementById('map');
+        
+        if (mapContainer && mapDiv) {
+          const lat = {{ data.geographic.coordinates.lat }};
+          const lon = {{ data.geographic.coordinates.lon }};
+          
+          try {
+            // Garantir que o container está visível
+            mapContainer.style.display = 'block';
+            
+            // Inicializar o mapa
+            const map = L.map('map', {
+              center: [lat, lon],
+              zoom: 10,
+              scrollWheelZoom: false
+            });
+            
+            // Adicionar tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors',
+              maxZoom: 18
+            }).addTo(map);
+            
+            // Adicionar marcador
+            const marker = L.marker([lat, lon]).addTo(map);
+            marker.bindPopup(`
+              <div style="color: #333; text-align: center;">
+                <b>{{ data.ip }}</b><br>
+                <small>{{ data.geographic.city or "Unknown City" }}, {{ data.geographic.country_name or "Unknown Country" }}</small><br>
+                <small>{{ data.network.isp or "Unknown ISP" }}</small>
+              </div>
+            `).openPopup();
+            
+            // Forçar redimensionamento do mapa
+            setTimeout(() => {
+              map.invalidateSize();
+            }, 100);
+            
+            console.log('🗺️ Map initialized successfully');
+          } catch (error) {
+            console.error('❌ Map initialization failed:', error);
+            mapDiv.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #888;"><i class="fas fa-map-marked-alt" style="font-size: 3rem;"></i></div>';
+          }
+        }
+      }, 500); // Aguardar 500ms para garantir que tudo esteja carregado
+    });
+    {% endif %}
+
+    // Enhanced keyboard support
+    document.getElementById('ipInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchIP();
+      }
+    });
+
+    // Auto-focus and popular examples
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('ipInput').focus();
+      
+      // Add popular examples
+      const searchSection = document.querySelector('.search-section');
+      const examples = document.createElement('div');
+      examples.className = 'mt-3';
+      examples.innerHTML = `
+        <small style="color: #888;">
+          <strong><i class="fas fa-lightbulb"></i> Popular Examples:</strong> 
+          <a href="#" onclick="setExampleIP('8.8.8.8')" style="color: var(--primary-color);">8.8.8.8 (Google DNS)</a> • 
+          <a href="#" onclick="setExampleIP('1.1.1.1')" style="color: var(--primary-color);">1.1.1.1 (Cloudflare)</a> • 
+          <a href="#" onclick="setExampleIP('208.67.222.222')" style="color: var(--primary-color);">208.67.222.222 (OpenDNS)</a> •
+          <a href="#" onclick="setExampleIP('4.4.4.4')" style="color: var(--primary-color);">4.4.4.4 (Level3)</a>
+        </small>
+      `;
+      searchSection.appendChild(examples);
+    });
+
+    function setExampleIP(ip) {
+      document.getElementById('ipInput').value = ip;
+      document.getElementById('ipInput').focus();
+    }
+
+    // Service Worker registration for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then(function(registration) {
+            console.log('🔧 ServiceWorker registration successful');
+          }, function(err) {
+            console.log('❌ ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Live Sandbox Pro - DevTools Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        body.light-theme {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .light-theme .container {
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .light-theme .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 600px;
+        }
+
+        .editor-panel {
+            background: #282a36;
+            border-right: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .light-theme .editor-panel {
+            background: #fafafa;
+        }
+
+        .output-panel {
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .light-theme .output-panel {
+            background: #ffffff;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-panel .panel-header {
+            background: #1e1e2e;
+            color: #f8f8f2;
+            border-bottom: 1px solid #44475a;
+        }
+
+        .light-theme .editor-panel .panel-header {
+            background: #e2e8f0;
+            color: #374151;
+            border-bottom: 1px solid #cbd5e0;
+        }
+
+        .output-panel .panel-header {
+            background: #e2e8f0;
+            color: #374151;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .console {
+            flex: 1;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-y: auto;
+            background: #1a1b26;
+            color: #a9b1d6;
+            transition: all 0.3s ease;
+        }
+
+        .light-theme .console {
+            background: #f8fafc;
+            color: #374151;
+        }
+
+        .console-entry {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid;
+            position: relative;
+        }
+
+        .console-log {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .console-error {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .light-theme .console-error {
+            color: #dc2626;
+        }
+
+        .console-warn {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            color: #fcd34d;
+        }
+
+        .light-theme .console-warn {
+            color: #d97706;
+        }
+
+        .console-info {
+            border-left-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            color: #93c5fd;
+        }
+
+        .light-theme .console-info {
+            color: #1d4ed8;
+        }
+
+        .timestamp {
+            opacity: 0.6;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+
+        .examples {
+            padding: 20px;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .light-theme .examples {
+            background: #f8fafc;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #374151;
+            transition: all 0.2s ease;
+        }
+
+        .example-btn:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+            transform: translateY(-1px);
+        }
+
+        .status-bar {
+            background: #f8fafc;
+            padding: 12px 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .execution-time {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .loading-indicator.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-panel {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .history-panel.active {
+            display: block;
+        }
+
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .share-modal.active {
+            display: flex;
+        }
+
+        .share-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .share-url {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            background: #f8fafc;
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Animações */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .console-entry {
+            animation: slideIn 0.3s ease;
+        }
+
+        .loading-indicator.active .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        /* Scrollbar customizada */
+        .console::-webkit-scrollbar,
+        .history-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .console::-webkit-scrollbar-track,
+        .history-panel::-webkit-scrollbar-track {
+            background: #2a2a3a;
+        }
+
+        .light-theme .console::-webkit-scrollbar-track,
+        .light-theme .history-panel::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+
+        .console::-webkit-scrollbar-thumb,
+        .history-panel::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+
+        .console::-webkit-scrollbar-thumb:hover,
+        .history-panel::-webkit-scrollbar-thumb:hover {
+            background: #6a7589;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>
+                    <i class="fas fa-code"></i>
+                    JavaScript Live Sandbox Pro
+                </h1>
+                <div class="subtitle">Execute JavaScript code in real-time with console output - Enhanced Edition</div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="runCode()">
+                    <i class="fas fa-play"></i>
+                    Executar (Ctrl+Enter)
+                </button>
+                <button class="btn btn-secondary" onclick="formatCode()">
+                    <i class="fas fa-magic"></i>
+                    Formatar
+                </button>
+                <button class="btn btn-info" onclick="saveCode()">
+                    <i class="fas fa-save"></i>
+                    Salvar
+                </button>
+                <button class="btn btn-warning" onclick="toggleHistory()">
+                    <i class="fas fa-history"></i>
+                    Histórico
+                </button>
+                <button class="btn btn-info" onclick="shareCode()">
+                    <i class="fas fa-share"></i>
+                    Compartilhar
+                </button>
+                <button class="btn btn-danger" onclick="clearConsole()">
+                    <i class="fas fa-trash"></i>
+                    Limpar
+                </button>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span><i class="fas fa-code"></i> Editor de Código</span>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                        <i class="fas fa-adjust"></i>
+                    </button>
+                </div>
+                <textarea id="code-editor">// 🚀 JavaScript Live Sandbox Pro - Enhanced Edition
+// Bem-vindo AnesDiego! Agora com muito mais recursos!
+
+console.log('🎉 Sandbox Pro inicializado com sucesso!');
+console.log('👤 Usuário: AnesDiego');
+console.log('🕐 Data atual: ' + new Date().toLocaleString('pt-BR'));
+
+// ✨ NOVOS RECURSOS DISPONÍVEIS:
+// 1. Auto-complete (Ctrl+Space)
+// 2. Salvar código (localStorage)
+// 3. Histórico de execuções
+// 4. Compartilhamento de código
+// 5. Temas claro/escuro
+// 6. Indicador de carregamento
+
+// 🧮 Exemplo: Calculadora avançada
+class Calculator {
+    static add(a, b) { return a + b; }
+    static multiply(a, b) { return a * b; }
+    static power(base, exp) { return Math.pow(base, exp); }
+}
+
+console.log('Calculadora:', Calculator.add(5, 3));
+console.log('Potência:', Calculator.power(2, 8));
+
+// 🎯 Experimente os novos exemplos nos botões abaixo!
+console.log('💡 Dica: Use Ctrl+Space para auto-complete!');
+</textarea>
+            </div>
+
+            <div class="output-panel">
+                <div class="panel-header">
+                    <span><i class="fas fa-terminal"></i> Console de Saída</span>
+                    <div class="loading-indicator" id="loading-indicator">
+                        <div class="spinner"></div>
+                        <span>Executando...</span>
+                    </div>
+                </div>
+                <div class="console" id="console"></div>
+                <div class="examples">
+                    <h3>Exemplos Rápidos Pro:</h3>
+                    <div class="example-buttons">
+                        <button class="example-btn" onclick="loadExample('basic')">Básico</button>
+                        <button class="example-btn" onclick="loadExample('dom')">DOM</button>
+                        <button class="example-btn" onclick="loadExample('async')">Async/Await</button>
+                        <button class="example-btn" onclick="loadExample('algorithms')">Algoritmos</button>
+                        <button class="example-btn" onclick="loadExample('api')">API Fetch</button>
+                        <button class="example-btn" onclick="loadExample('websocket')">WebSocket</button>
+                        <button class="example-btn" onclick="loadExample('workers')">Workers</button>
+                        <button class="example-btn" onclick="loadExample('performance')">Performance</button>
+                        <button class="example-btn" onclick="loadExample('es6')">ES6+ Features</button>
+                    </div>
+                    <div class="history-panel" id="history-panel">
+                        <h4 style="padding: 10px; margin: 0; background: rgba(0,0,0,0.1);">📋 Histórico de Códigos</h4>
+                        <div id="history-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="user-info">
+                <i class="fas fa-user"></i>
+                <span>AnesDiego</span>
+                <i class="fas fa-calendar"></i>
+                <span id="current-date"></span>
+            </div>
+            <span id="status-text">Pronto para executar código JavaScript Pro</span>
+            <span class="execution-time" id="execution-time"></span>
+        </div>
+    </div>
+
+    <!-- Modal de Compartilhamento -->
+    <div class="share-modal" id="share-modal">
+        <div class="share-content">
+            <h3>🚀 Compartilhar Código</h3>
+            <p>Copie o link abaixo para compartilhar seu código:</p>
+            <input type="text" class="share-url" id="share-url" readonly>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="copyShareUrl()">
+                    <i class="fas fa-copy"></i>
+                    Copiar Link
+                </button>
+                <button class="btn btn-secondary" onclick="closeShareModal()">
+                    <i class="fas fa-times"></i>
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editor;
+        let executionCount = 0;
+        let executionHistory = [];
+        let isLightTheme = false;
+
+        // Inicializar CodeMirror
+        document.addEventListener('DOMContentLoaded', function() {
+            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+                mode: 'javascript',
+                theme: 'dracula',
+                lineNumbers: true,
+                lineWrapping: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 2,
+                tabSize: 2,
+                extraKeys: {
+                    'Ctrl-Enter': runCode,
+                    'Cmd-Enter': runCode,
+                    'Ctrl-/': 'toggleComment',
+                    'Cmd-/': 'toggleComment',
+                    'Ctrl-Space': 'autocomplete'
+                },
+                hintOptions: {
+                    completeSingle: false
+                }
+            });
+
+            // Interceptar console original
+            setupConsoleInterception();
+            
+            // Carregar código salvo
+            loadSavedCode();
+            
+            // Atualizar data
+            updateCurrentDate();
+            setInterval(updateCurrentDate, 1000);
+
+            // Carregar histórico
+            loadHistory();
+        });
+
+        function updateCurrentDate() {
+            document.getElementById('current-date').textContent = 
+                new Date().toLocaleString('pt-BR');
+        }
+
+        function setupConsoleInterception() {
+            const originalConsole = {
+                log: console.log,
+                error: console.error,
+                warn: console.warn,
+                info: console.info
+            };
+
+            console.log = (...args) => {
+                addToConsole('log', args);
+                originalConsole.log(...args);
+            };
+
+            console.error = (...args) => {
+                addToConsole('error', args);
+                originalConsole.error(...args);
+            };
+
+            console.warn = (...args) => {
+                addToConsole('warn', args);
+                originalConsole.warn(...args);
+            };
+
+            console.info = (...args) => {
+                addToConsole('info', args);
+                originalConsole.info(...args);
+            };
+        }
+
+        function addToConsole(type, args) {
+            const consoleDiv = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `console-entry console-${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const content = args.map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+
+            entry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <span>${content}</span>
+            `;
+
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function showLoadingIndicator() {
+            document.getElementById('loading-indicator').classList.add('active');
+            document.getElementById('status-text').textContent = 'Executando código...';
+        }
+
+        function hideLoadingIndicator() {
+            document.getElementById('loading-indicator').classList.remove('active');
+            document.getElementById('status-text').textContent = 'Código executado com sucesso';
+        }
+
+        async function runCode() {
+            const code = editor.getValue();
+            const startTime = performance.now();
+            
+            showLoadingIndicator();
+            
+            // Simular delay mínimo para mostrar o loading
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            try {
+                console.log(`\n🚀 === Execução #${++executionCount} === 🚀`);
+                console.log(`📅 ${new Date().toLocaleString('pt-BR')}`);
+                console.log(`👤 Executado por: AnesDiego\n`);
+                
+                // Salvar no histórico
+                saveToHistory(code);
+                
+                // Criar função e executar
+                const func = new Function(code);
+                const result = func();
+                
+                if (result !== undefined) {
+                    console.log('✅ Resultado final:', result);
+                }
+                
+                const endTime = performance.now();
+                const executionTime = (endTime - startTime).toFixed(2);
+                document.getElementById('execution-time').textContent = `⚡ ${executionTime}ms`;
+                
+            } catch (error) {
+                console.error('❌ Erro de execução:', error.message);
+                console.error('📍 Stack trace:', error.stack);
+            } finally {
+                hideLoadingIndicator();
+            }
+        }
+
+        function formatCode() {
+            const code = editor.getValue();
+            // Formatação básica melhorada
+            try {
+                // Tentar usar prettier se estivesse disponível
+                const formatted = code
+                    .replace(/;/g, ';\n')
+                    .replace(/{/g, ' {\n    ')
+                    .replace(/}/g, '\n}\n')
+                    .replace(/,/g, ',\n    ')
+                    .replace(/\n\s*\n/g, '\n')
+                    .replace(/^\s+/gm, (match) => '    '.repeat(match.length / 4));
+                
+                editor.setValue(formatted);
+                console.log('✨ Código formatado com sucesso!');
+            } catch (error) {
+                console.warn('⚠️ Erro ao formatar código:', error.message);
+            }
+        }
+
+        function saveCode() {
+            const code = editor.getValue();
+            const timestamp = new Date().toISOString();
+            
+            localStorage.setItem('sandbox-pro-code', code);
+            localStorage.setItem('sandbox-pro-timestamp', timestamp);
+            
+            console.log('💾 Código salvo com sucesso!');
+            console.log('📅 Salvo em:', new Date(timestamp).toLocaleString('pt-BR'));
+        }
+
+        function loadSavedCode() {
+            const savedCode = localStorage.getItem('sandbox-pro-code');
+            if (savedCode) {
+                const timestamp = localStorage.getItem('sandbox-pro-timestamp');
+                console.log('📂 Código carregado do localStorage');
+                if (timestamp) {
+                    console.log('📅 Salvo em:', new Date(timestamp).toLocaleString('pt-BR'));
+                }
+            }
+        }
+
+        function saveToHistory(code) {
+            const historyItem = {
+                id: Date.now(),
+                code: code.substring(0, 100) + (code.length > 100 ? '...' : ''),
+                fullCode: code,
+                timestamp: new Date().toLocaleString('pt-BR'),
+                execution: executionCount
+            };
+            
+            executionHistory.unshift(historyItem);
+            
+            // Manter apenas os últimos 10
+            if (executionHistory.length > 10) {
+                executionHistory = executionHistory.slice(0, 10);
+            }
+            
+            localStorage.setItem('sandbox-pro-history', JSON.stringify(executionHistory));
+            updateHistoryDisplay();
+        }
+
+        function loadHistory() {
+            const saved = localStorage.getItem('sandbox-pro-history');
+            if (saved) {
+                executionHistory = JSON.parse(saved);
+                updateHistoryDisplay();
+            }
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            executionHistory.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div style="font-weight: bold; color: #6366f1;">Execução #${item.execution}</div>
+                    <div style="font-size: 11px; opacity: 0.7;">${item.timestamp}</div>
+                    <div style="font-family: monospace; margin-top: 5px;">${item.code}</div>
+                `;
+                div.onclick = () => {
+                    editor.setValue(item.fullCode);
+                    toggleHistory(); // Fechar histórico
+                    console.log(`📜 Código da execução #${item.execution} carregado!`);
+                };
+                historyList.appendChild(div);
+            });
+        }
+
+        function toggleHistory() {
+            const panel = document.getElementById('history-panel');
+            panel.classList.toggle('active');
+        }
+
+        function shareCode() {
+            const code = editor.getValue();
+            const encodedCode = btoa(encodeURIComponent(code));
+            const shareUrl = `${window.location.origin}${window.location.pathname}?code=${encodedCode}`;
+            
+            document.getElementById('share-url').value = shareUrl;
+            document.getElementById('share-modal').classList.add('active');
+            
+            console.log('🔗 Link de compartilhamento gerado!');
+        }
+
+        function copyShareUrl() {
+            const shareUrl = document.getElementById('share-url');
+            shareUrl.select();
+            document.execCommand('copy');
+            console.log('📋 Link copiado para a área de transferência!');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.remove('active');
+        }
+
+        function toggleTheme() {
+            isLightTheme = !isLightTheme;
+            document.body.classList.toggle('light-theme');
+            
+            // Alterar tema do editor
+            editor.setOption('theme', isLightTheme ? 'material' : 'dracula');
+            
+            localStorage.setItem('sandbox-pro-theme', isLightTheme ? 'light' : 'dark');
+            console.log(`🎨 Tema alterado para: ${isLightTheme ? 'Claro' : 'Escuro'}`);
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '';
+            console.log('🧹 Console limpo por AnesDiego');
+        }
+
+        function loadExample(type) {
+            const examples = {
+                basic: `// 🎯 Exemplo Básico Pro: Classes e Módulos ES6+
+class Usuario {
+    constructor(nome, email) {
+        this.nome = nome;
+        this.email = email;
+        this.criado = new Date();
+    }
+    
+    saudar() {
+        return \`👋 Olá, sou \${this.nome}! Conta criada em \${this.criado.toLocaleDateString('pt-BR')}\`;
+    }
+    
+    get idade() {
+        return Math.floor((Date.now() - this.criado) / 1000);
+    }
+}
+
+const anes = new Usuario('AnesDiego', 'anes@exemplo.com');
+console.log(anes.saudar());
+console.log(\`⏱️  Conta existe há \${anes.idade} segundos\`);
+
+// Destructuring e spread operator
+const dados = { nome: 'JS', versao: 'ES2023', recursos: ['async', 'modules', 'classes'] };
+const { nome, ...resto } = dados;
+console.log('📦 Dados:', { nome, resto });`,
+
+                websocket: `// 🌐 Exemplo WebSocket: Conexão em tempo real
+console.log('🔌 Exemplo WebSocket - Conexão simulada');
+
+class WebSocketSimulator {
+    constructor(url) {
+        this.url = url;
+        this.isConnected = false;
+        this.messageQueue = [];
+    }
+    
+    connect() {
+        console.log(\`📡 Conectando a \${this.url}...\`);
+        
+        setTimeout(() => {
+            this.isConnected = true;
+            console.log('✅ Conexão WebSocket estabelecida!');
+            this.onopen?.();
+            
+            // Simular mensagens recebidas
+            this.simulateMessages();
+        }, 1000);
+    }
+    
+    send(message) {
+        if (this.isConnected) {
+            console.log(\`📤 Enviando: \${message}\`);
+            this.messageQueue.push({ type: 'sent', data: message, time: new Date() });
+        } else {
+            console.error('❌ WebSocket não conectado!');
+        }
+    }
+    
+    simulateMessages() {
+        const messages = [
+            'Bem-vindo ao servidor!',
+            'Você tem 3 notificações',
+            'Sistema atualizado com sucesso'
+        ];
+        
+        messages.forEach((msg, index) => {
+            setTimeout(() => {
+                console.log(\`📥 Recebido: \${msg}\`);
+                this.onmessage?.({ data: msg });
+            }, (index + 1) * 2000);
+        });
+    }
+}
+
+const ws = new WebSocketSimulator('wss://exemplo.com/socket');
+
+ws.onopen = () => {
+    console.log('🎉 Pronto para enviar mensagens!');
+    ws.send('Olá servidor!');
+};
+
+ws.onmessage = (event) => {
+    console.log(\`💬 Nova mensagem: \${event.data}\`);
+};
+
+ws.connect();`,
+
+                workers: `// 👷 Exemplo Web Workers: Processamento em background
+console.log('👷 Exemplo Web Workers - Simulação');
+
+// Simulador de Web Worker
+class WorkerSimulator {
+    constructor(script) {
+        this.script = script;
+        this.isRunning = false;
+    }
+    
+    postMessage(data) {
+        console.log(\`📨 Enviando para worker: \${JSON.stringify(data)}\`);
+        this.isRunning = true;
+        
+        // Simular processamento pesado
+        setTimeout(() => {
+            const result = this.processData(data);
+            console.log(\`📬 Worker respondeu: \${JSON.stringify(result)}\`);
+            this.onmessage?.({ data: result });
+            this.isRunning = false;
+        }, 1500);
+    }
+    
+    processData(data) {
+        // Simular cálculo complexo
+        if (data.task === 'fibonacci') {
+            const fib = (n) => n <= 1 ? n : fib(n-1) + fib(n-2);
+            return {
+                task: 'fibonacci',
+                input: data.number,
+                result: fib(data.number),
+                processedAt: new Date().toISOString()
+            };
+        }
+        
+        if (data.task === 'primes') {
+            const isPrime = (n) => {
+                for (let i = 2; i <= Math.sqrt(n); i++) {
+                    if (n % i === 0) return false;
+                }
+                return n > 1;
+            };
+            
+            const primes = [];
+            for (let i = 2; i <= data.limit; i++) {
+                if (isPrime(i)) primes.push(i);
+            }
+            
+            return {
+                task: 'primes',
+                limit: data.limit,
+                primes: primes,
+                count: primes.length
+            };
+        }
+    }
+}
+
+// Usar o worker simulado
+const worker = new WorkerSimulator();
+
+worker.onmessage = (event) => {
+    console.log('✅ Processamento concluído!');
+    console.log('📊 Resultado:', event.data);
+};
+
+// Teste 1: Fibonacci
+console.log('🧮 Iniciando cálculo de Fibonacci...');
+worker.postMessage({ task: 'fibonacci', number: 10 });
+
+// Teste 2: Números primos
+setTimeout(() => {
+    console.log('🔢 Iniciando busca por números primos...');
+    worker.postMessage({ task: 'primes', limit: 50 });
+}, 3000);`,
+
+                performance: `// ⚡ Exemplo Performance: Medição e otimização
+console.log('⚡ Exemplo Performance - Análise de código');
+
+// Classe para medição de performance
+class PerformanceAnalyzer {
+    constructor() {
+        this.marks = new Map();
+        this.measures = new Map();
+    }
+    
+    mark(name) {
+        const timestamp = performance.now();
+        this.marks.set(name, timestamp);
+        console.log(\`🏁 Mark '\${name}': \${timestamp.toFixed(2)}ms\`);
+        return timestamp;
+    }
+    
+    measure(name, startMark, endMark) {
+        const start = this.marks.get(startMark);
+        const end = this.marks.get(endMark);
+        
+        if (!start || !end) {
+            console.error(\`❌ Marks não encontrados: \${startMark}, \${endMark}\`);
+            return;
+        }
+        
+        const duration = end - start;
+        this.measures.set(name, duration);
+        console.log(\`📏 Measure '\${name}': \${duration.toFixed(2)}ms\`);
+        return duration;
+    }
+    
+    getReport() {
+        console.log('📊 === RELATÓRIO DE PERFORMANCE ===');
+        this.measures.forEach((duration, name) => {
+            const rating = duration < 1 ? '🚀 Excelente' : 
+                          duration < 10 ? '✅ Bom' : 
+                          duration < 100 ? '⚠️ Regular' : '🐌 Lento';
+            console.log(\`\${rating} \${name}: \${duration.toFixed(2)}ms\`);
+        });
+    }
+}
+
+const analyzer = new PerformanceAnalyzer();
+
+// Teste 1: Algoritmo otimizado vs não otimizado
+analyzer.mark('sort-start');
+
+const dados = Array.from({length: 10000}, () => Math.floor(Math.random() * 1000));
+
+// Bubble sort (lento)
+analyzer.mark('bubble-start');
+const bubble = [...dados];
+for (let i = 0; i < 100; i++) { // Apenas 100 iterações para não travar
+    for (let j = 0; j < bubble.length - 1; j++) {
+        if (bubble[j] > bubble[j + 1]) {
+            [bubble[j], bubble[j + 1]] = [bubble[j + 1], bubble[j]];
+        }
+    }
+}
+analyzer.mark('bubble-end');
+
+// Native sort (rápido)
+analyzer.mark('native-start');
+const nativeSort = [...dados].sort((a, b) => a - b);
+analyzer.mark('native-end');
+
+analyzer.measure('Bubble Sort (100 iterações)', 'bubble-start', 'bubble-end');
+analyzer.measure('Native Sort (completo)', 'native-start', 'native-end');
+
+// Teste 2: Memory usage simulation
+console.log('💾 Testando uso de memória...');
+const memoryTest = {
+    small: new Array(1000).fill('test'),
+    medium: new Array(10000).fill('test'),
+    large: new Array(100000).fill('test')
+};
+
+console.log('📈 Arrays criados:', {
+    small: memoryTest.small.length,
+    medium: memoryTest.medium.length,
+    large: memoryTest.large.length
+});
+
+analyzer.getReport();`,
+
+                es6: `// 🆕 ES6+ Features: Recursos modernos do JavaScript
+console.log('🆕 Demonstração ES6+ Features');
+
+// 1. Destructuring avançado
+const usuario = {
+    nome: 'AnesDiego',
+    idade: 25,
+    endereco: {
+        cidade: 'São Paulo',
+        cep: '01234-567'
+    },
+    hobbies: ['coding', 'gaming', 'music']
+};
+
+// Destructuring com renaming e default values
+const { 
+    nome: nomeUsuario, 
+    idade = 18, 
+    endereco: { cidade },
+    hobbies: [primeiroHobby, ...outrosHobbies] 
+} = usuario;
+
+console.log('👤', { nomeUsuario, idade, cidade, primeiroHobby, outrosHobbies });
+
+// 2. Template literals avançados
+const criarRelatorio = (dados) => \`
+📋 === RELATÓRIO DO USUÁRIO ===
+👤 Nome: \${dados.nome}
+🎂 Idade: \${dados.idade} anos
+🏠 Cidade: \${dados.endereco.cidade}
+🎯 Hobbies: \${dados.hobbies.join(', ')}
+📅 Gerado em: \${new Date().toLocaleString('pt-BR')}
+\`;
+
+console.log(criarRelatorio(usuario));
+
+// 3. Arrow functions e métodos de array
+const numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const resultado = numeros
+    .filter(n => n % 2 === 0)           // Pares
+    .map(n => n ** 2)                   // Elevar ao quadrado
+    .reduce((acc, n) => acc + n, 0);    // Somar tudo
+
+console.log('🔢 Soma dos quadrados dos pares:', resultado);
+
+// 4. Promises e async/await
+const exemploAsync = async () => {
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    
+    console.log('⏳ Iniciando operações assíncronas...');
+    
+    try {
+        await delay(500);
+        console.log('✅ Operação 1 concluída');
+        
+        await delay(500);
+        console.log('✅ Operação 2 concluída');
+        
+        const dados = await Promise.all([
+            delay(300).then(() => 'Dados A'),
+            delay(400).then(() => 'Dados B'),
+            delay(200).then(() => 'Dados C')
+        ]);
+        
+        console.log('📦 Todos os dados carregados:', dados);
+        
+    } catch (error) {
+        console.error('❌ Erro:', error);
+    }
+};
+
+// 5. Classes modernas com getters/setters
+class ContadorInteligente {
+    #valor = 0; // Private field
+    
+    constructor(inicial = 0) {
+        this.#valor = inicial;
+    }
+    
+    get valor() {
+        return this.#valor;
+    }
+    
+    set valor(novoValor) {
+        if (typeof novoValor !== 'number') {
+            throw new Error('Valor deve ser um número');
+        }
+        this.#valor = novoValor;
+    }
+    
+    incrementar(quantidade = 1) {
+        this.#valor += quantidade;
+        return this;
+    }
+    
+    decrementar(quantidade = 1) {
+        this.#valor -= quantidade;
+        return this;
+    }
+    
+    reset() {
+        this.#valor = 0;
+        return this;
+    }
+    
+    toString() {
+        return \`Contador: \${this.#valor}\`;
+    }
+}
+
+const contador = new ContadorInteligente(5);
+console.log('🔢', contador.toString());
+
+contador.incrementar(3).decrementar(1);
+console.log('🔢 Após operações:', contador.toString());
+
+// 6. Modules simulation e Map/Set
+const cache = new Map();
+const visitados = new Set();
+
+cache.set('user:123', { nome: 'AnesDiego', ativo: true });
+cache.set('user:456', { nome: 'João', ativo: false });
+
+visitados.add('home');
+visitados.add('profile');
+visitados.add('settings');
+
+console.log('💾 Cache:', Array.from(cache.entries()));
+console.log('👁️ Páginas visitadas:', Array.from(visitados));
+
+// Executar exemplo async
+exemploAsync();`
+            };
+
+            if (examples[type]) {
+                editor.setValue(examples[type]);
+                console.log(`📝 Exemplo "${type}" carregado!`);
+            }
+        }
+
+        // Carregar código da URL se houver
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedCode = urlParams.get('code');
+            
+            if (sharedCode) {
+                try {
+                    const decodedCode = decodeURIComponent(atob(sharedCode));
+                    editor.setValue(decodedCode);
+                    console.log('🔗 Código compartilhado carregado!');
+                } catch (error) {
+                    console.error('❌ Erro ao carregar código compartilhado:', error);
+                }
+            }
+        });
+
+        // Atalhos de teclado globais
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+            
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveCode();
+            }
+        });
+
+        // Fechar modal clicando fora
+        document.getElementById('share-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShareModal();
+            }
+        });
+
+        // Auto-save a cada 30 segundos
+        setInterval(() => {
+            if (editor && editor.getValue().trim()) {
+                saveCode();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

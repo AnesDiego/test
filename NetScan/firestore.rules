@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public access denied by default - all analytics are private
+    
+    // User analytics - completely private, no client access
+    match /user_analytics/{sessionId} {
+      allow read, write: if false; // Server-only access via Admin SDK
+    }
+    
+    // Daily stats - completely private, no client access
+    match /daily_stats/{date} {
+      allow read, write: if false; // Server-only access via Admin SDK
+    }
+    
+    // Scan events - completely private, no client access
+    match /scan_events/{eventId} {
+      allow read, write: if false; // Server-only access via Admin SDK
+    }
+    
+    // Users can only access their own analyses (if implementing user system)
+    match /analyses/{analysisId} {
+      allow read, write: if request.auth != null && 
+                         request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                    request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Public analytics (read-only)
+    match /analytics/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
